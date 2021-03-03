@@ -1,4 +1,4 @@
-# Cryptocurrency ePaper Ticker 
+# Cryptocurrency ePaper Ticker with NiceHash unpaid mining balance added
 (supports all 6000+ coins/currencies listed on [CoinGecko](https://api.coingecko.com/api/v3/coins/list))
 
 A Python3 ePaper Cryptocurrency price ticker that runs on a Raspberry Pi connected to a [Waveshare 2.7 inch monochrome ePaper display](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT) or [Waveshare 2.13 inch monochrome ePaper display](https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT).
@@ -147,6 +147,8 @@ sudo apt install libatlas-base-dev
 and re-run the script.
 
 If the unit is freezing, try switching to another power supply. 
+
+To use the NiceHash unpaid balance reporting you will need to aquire your API authorization keys from inside your account settings.
 
 # Licencing
 
