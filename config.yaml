@@ -2,9 +2,14 @@ display:
   cycle: true
   inverted: false
   orientation: 270
+mining:
+  enabled: false
+  key:
+  organisation:
+  secret:
 ticker:
-  coinname: false
-  currency: ethereum,stellar,bitcoin-cash,monero,mithril,litecoin,ravencoin,bitcoin
+  coinname: true
+  currency: bitcoin-cash,monero,mithril,litecoin,ravencoin,bitcoin,ethereum,stellar
   exchange: default
   fiatcurrency: cad
   sparklinedays: 7

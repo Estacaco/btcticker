@@ -17,13 +17,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml 
 import socket
+import json
+import nicehash
+import requests
+import decimal
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 fontdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fonts')
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 fonthiddenprice = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 30)
 font = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 40)
 fontHorizontal = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 16)
-font_date = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'),11)
+font_date = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 11)
+font_mining = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 12)
 
 def internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -205,6 +210,29 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
         image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
         draw = ImageDraw.Draw(image)   
         draw.text((135,85),str(days_ago)+" day : "+pricechange,font =font_date,fill = 0)
+#mining
+        if config['mining']['enabled'] == True :
+            host = 'https://api2.nicehash.com'
+            organisation_id = str(config['mining']['organisation'])
+            key = str(config['mining']['key'])
+            secret = str(config['mining']['secret'])
+
+
+            private_api = nicehash.private_api(host, organisation_id, key, secret)
+
+            unpaid = private_api.get_unpaid()
+
+            strdata = str(unpaid['data'])
+            listdata = strdata.split(",")
+
+            maybe = float(listdata[2])
+            almost = format(float(maybe), '.8f')
+            working = decimal.Decimal(almost)
+            ok = working * 100000000
+            final = int(ok)
+
+            draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0)
+
 
  #.     uncomment the line below to show volume
  #       draw.text((110,105),"24h vol : " + human_format(other['volume']),font =font_date,fill = 0)
@@ -218,7 +246,7 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
         image.paste(sparkbitmap,(80,25))
         image.paste(tokenimage, (0,10))
  #       draw.text((5,110),"Inretrospect, it was inevitable",font =font_date,fill = 0)
-        draw.text((95,1),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
+        draw.text((100,1),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
         if config['display']['orientation'] == 270 :
             image=image.rotate(180, expand=True)
 #       This is a hack to deal with the mirroring that goes on in 4Gray Horizontal
