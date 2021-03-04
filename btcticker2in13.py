@@ -212,27 +212,27 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
         draw.text((135,85),str(days_ago)+" day : "+pricechange,font =font_date,fill = 0)
 #mining
         if config['mining']['enabled'] == True :
-            host = 'https://api2.nicehash.com'
-            organisation_id = str(config['mining']['organisation'])
-            key = str(config['mining']['key'])
-            secret = str(config['mining']['secret'])
+            host = 'https://api2.nicehash.com' #host connection
+            organisation_id = str(config['mining']['organisation']) #organisation string
+            key = str(config['mining']['key']) #public key string
+            secret = str(config['mining']['secret']) #secret key string
 
 
             private_api = nicehash.private_api(host, organisation_id, key, secret)
 
-            unpaid = private_api.get_unpaid()
+            unpaid = private_api.get_unpaid() #get unpaid json
 
-            strdata = str(unpaid['data'])
-            listdata = strdata.split(",")
+            strdata = str(unpaid['data']) #grab "data" section and convert to string
+            listdata = strdata.split(",") #organize
 
-            maybe = float(listdata[2])
-            almost = format(float(maybe), '.8f')
-            working = decimal.Decimal(almost)
-            ok = working * 100000000
-            final = int(ok)
+            maybe = float(listdata[2]) #grab total unpaid
+            almost = format(float(maybe), '.8f') #convert form scientific to decimal float
+            working = decimal.Decimal(almost) #convert from float to decimal
+            ok = working * 100000000 #make whole number
+            final = int(ok) #convert to integer to drop decimals
 
-            draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0)
-
+            draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0) #draw unpaid mining
+#end mining
 
  #.     uncomment the line below to show volume
  #       draw.text((110,105),"24h vol : " + human_format(other['volume']),font =font_date,fill = 0)
