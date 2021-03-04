@@ -1,7 +1,7 @@
 display:
   cycle: true
   inverted: false
-  orientation: 270
+  orientation: 90
 mining:
   enabled: false
   key:
@@ -13,4 +13,4 @@ ticker:
   exchange: default
   fiatcurrency: cad
   sparklinedays: 7
-  updatefrequency: 30
+  updatefrequency: 120
