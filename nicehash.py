@@ -186,7 +186,7 @@ class private_api:
 
     def get_unpaid(self):
 
-        afterTimestamp = self.get_epoch_ms_from_now()-300000
+        afterTimestamp = self.get_epoch_ms_from_now()-400000
         params = "afterTimestamp={}".format(afterTimestamp)
 
         return self.request('GET', '/main/api/v2/mining/rigs/stats/unpaid/', params, None)
