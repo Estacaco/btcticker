@@ -26,6 +26,8 @@ Install the Waveshare Python module following the instructions on their [Wiki](h
 cd e-Paper/RaspberryPi_JetsonNano/python
 sudo python3 setup.py install
 ```
+
+NiceHash API Keys if using the unpaid mining.
 ## Install & Run
 
 Copy the files from this repository onto the Pi, or clone using:
@@ -147,6 +149,12 @@ sudo apt install libatlas-base-dev
 and re-run the script.
 
 If the unit is freezing, try switching to another power supply. 
+
+Orientation must be set to 90 or 270 for the 2.13" screen.
+
+Coin names only work with the 2.13" screen.
+
+Unpaid mining only works for the 2.13" screen.
 
 To use the NiceHash unpaid balance reporting you will need to aquire your API authorization keys from inside your account settings.
 
