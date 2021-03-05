@@ -4,6 +4,7 @@ display:
   orientation: 270
 mining:
   display: unpaid,wallet
+  walletcurrency: cad
   enabled: true
   key: 3d13168f-6b85-44aa-bff5-20fb60731031
   organisation: 6802cbfc-7854-4ecb-8526-f6abb1439bb6
