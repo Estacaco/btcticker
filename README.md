@@ -161,6 +161,8 @@ To use the NiceHash unpaid/wallet balance reporting you will need to aquire your
 
 You can set it to display the wallet, unpaid or both in the config.
 
+"walletcurrency" supports btc and cad. to change to usd, euro etc. Go into the nicehash.py and change the fiat value to your desired currency.
+
 # Licencing
 
 The code in this project is licensed under MIT license.
