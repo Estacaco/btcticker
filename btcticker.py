@@ -7,7 +7,7 @@ import os
 import sys
 import logging
 import RPi.GPIO as GPIO
-from waveshare_epd import epd2in7
+from waveshare_epd import epd2in13_V2
 import time
 import requests
 import urllib, json
@@ -17,13 +17,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml 
 import socket
+import json
+import nicehash
+import requests
+import decimal
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 fontdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fonts')
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 fonthiddenprice = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 30)
 font = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 40)
-fontHorizontal = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 50)
-font_date = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'),11)
+fontHorizontal = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 16)
+font_date = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 11)
+font_mining = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 12)
+font_mining2 = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 10)
 
 def internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -105,15 +111,15 @@ def getData(config,whichcoin,fiat,other):
 def beanaproblem(message):
 #   A visual cue that the wheels have fallen off
     thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
-    epd = epd2in7.EPD()
-    epd.Init_4Gray()
+    epd = epd2in13_V2.EPD()
+    epd.init(epd.FULL_UPDATE)
     image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
     draw = ImageDraw.Draw(image)
     image.paste(thebean, (60,15))
     draw.text((15,150),message, font=font_date,fill = 0)
     image = ImageOps.mirror(image)
-    epd.display_4Gray(epd.getbuffer_4Gray(image))
-    logging.info("epd2in7 BTC Frame")
+    epd.display(epd.getbuffer(image))
+    logging.info("epd2in13_V2 BTC Frame")
 #   Reload last good config.yaml
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -136,7 +142,7 @@ def makeSpark(pricestack):
     ax.axhline(c='k', linewidth=4, linestyle=(0, (5, 2, 1, 2)))
 
     # Save the resulting bmp file to the images directory
-    plt.savefig(os.path.join(picdir,'spark.png'), dpi=17)
+    plt.savefig(os.path.join(picdir,'spark.png'), dpi=20)
     imgspk = Image.open(os.path.join(picdir,'spark.png'))
     file_out = os.path.join(picdir,'spark.bmp')
     imgspk.save(file_out) 
@@ -184,8 +190,8 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
         pricenowstring =str(float('%.5g' % pricenow))
 
     if config['display']['orientation'] == 0 or config['display']['orientation'] == 180 :
-        epd = epd2in7.EPD()
-        epd.Init_4Gray()
+        epd = epd2in13_V2.EPD()
+        epd.init(epd.FULL_UPDATE)
         image = Image.new('L', (epd.width, epd.height), 255)    # 255: clear the image with white
         draw = ImageDraw.Draw(image)              
         draw.text((110,80),str(days_ago)+"day :",font =font_date,fill = 0)
@@ -200,31 +206,67 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
 
 
     if config['display']['orientation'] == 90 or config['display']['orientation'] == 270 :
-        epd = epd2in7.EPD()
-        epd.Init_4Gray()
+        epd = epd2in13_V2.EPD()
+        epd.init(epd.FULL_UPDATE)
         image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
         draw = ImageDraw.Draw(image)   
-        draw.text((110,90),str(days_ago)+" day : "+pricechange,font =font_date,fill = 0)
+        draw.text((135,85),str(days_ago)+" day : "+pricechange,font =font_date,fill = 0)
+#mining
+        if config['mining']['enabled'] == True :
+            host = 'https://api2.nicehash.com' #host connection
+            organisation_id = str(config['mining']['organisation']) #organisation string
+            key = str(config['mining']['key']) #public key string
+            secret = str(config['mining']['secret']) #secret key string
+
+            private_api = nicehash.private_api(host, organisation_id, key, secret)
+
+            if config['mining']['display'] == "wallet,unpaid" or config['mining']['display'] == "wallet" :
+                accounts = private_api.get_accounts() #get accounts json
+                accountsdata = str(accounts['total']) #grab totals
+                accountslist = accountsdata.split("'") #organize
+                wallet = float(accountslist[7]) #isolate total balance
+
+                draw.text((100,13),"Wallet: "+str(wallet)+" BTC",font =font_mining2,fill = 0) #draw wallet balance
+            if config['mining']['display'] == "unpaid,wallet" or config['mining']['display'] == "unpaid" :
+                unpaid = private_api.get_unpaid() #get unpaid json
+
+                strdata = str(unpaid['data']) #grab "data" section and convert to string
+                listdata = strdata.split(",") #organize
+
+                maybe = float(listdata[2]) #grab total unpaid
+                almost = format(float(maybe), '.8f') #convert form scientific to decimal float
+                working = decimal.Decimal(almost) #convert from float to decimal
+                ok = working * 100000000 #make whole number
+                final = int(ok) #convert to integer to drop decimals
+
+                draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0) #draw unpaid mining
+
+
+#end mining
 
  #.     uncomment the line below to show volume
  #       draw.text((110,105),"24h vol : " + human_format(other['volume']),font =font_date,fill = 0)
-        draw.text((10,120),symbolstring+pricenowstring,font =fontHorizontal,fill = 0)
+        if config['ticker']['coinname'] == True :
+            draw.text((100,100),symbolstring+pricenowstring+"/"+whichcoin,font =fontHorizontal,fill = 0)
+        else:
+            draw.text((135,100),symbolstring+pricenowstring,font =fontHorizontal,fill = 0)
+
         if other['ATH']==True:
             image.paste(ATHbitmap,(190,85))
-        image.paste(sparkbitmap,(80,40))
+        image.paste(sparkbitmap,(80,25))
         image.paste(tokenimage, (0,10))
- #       draw.text((5,110),"In retrospect, it was inevitable",font =font_date,fill = 0)
-        draw.text((95,15),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
+ #       draw.text((5,110),"Inretrospect, it was inevitable",font =font_date,fill = 0)
+        draw.text((95,1),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
         if config['display']['orientation'] == 270 :
             image=image.rotate(180, expand=True)
 #       This is a hack to deal with the mirroring that goes on in 4Gray Horizontal
-        image = ImageOps.mirror(image)
+#        image = ImageOps.mirror(image)
 
 #   If the display is inverted, invert the image usinng ImageOps        
     if config['display']['inverted'] == True:
         image = ImageOps.invert(image)
 #   Send the image to the screen        
-    epd.display_4Gray(epd.getbuffer_4Gray(image))
+    epd.display(epd.getbuffer(image))
 #    epd.sleep()
 
 def currencystringtolist(currstring):
@@ -237,6 +279,15 @@ def currencycycle(curr_list):
     # Rotate the array of currencies from config.... [a b c] becomes [b c a]
     curr_list = curr_list[1:]+curr_list[:1]
     return curr_list    
+
+def currencystringtolist(mdisplaystring):
+    mdisplay_list = mdisplaystring.split(",")
+    mdisplay_list = [x.strip(' ') for x in mdisplay_list]
+    return mdisplay_list
+
+def mdisplaycycle(mdisplay_list):
+    mdisplay_list = mdisplay_list[1:]+mdisplay_list[:1]
+    return mdisplay_list
 
 def main():
     
@@ -270,13 +321,14 @@ def main():
         """ 
         config['ticker']['currency']=",".join(crypto_list)
         config['ticker']['fiatcurrency']=",".join(fiat_list)
+        config['mining']['display']=",".join(mdisplay_list)
         with open(configfile, 'w') as f:
             data = yaml.dump(config, f)    
 
     logging.basicConfig(level=logging.DEBUG)
 
     try:
-        logging.info("epd2in7 BTC Frame")
+        logging.info("epd2in13_V2 BTC Frame")
 #       Get the configuration from config.yaml
         with open(configfile) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -289,11 +341,16 @@ def main():
         fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
         logging.info(fiat_list) 
 
+        mdisplay_list=currencystringtolist(config['mining']['display'])
+        logging.info(mdisplay_list)
+
         CURRENCY=crypto_list[0]
         FIAT=fiat_list[0]
+        MDISPLAY=mdisplay_list[0]
 
         logging.info(CURRENCY)
         logging.info(FIAT)
+        logging.info(MDISPLAY)
 
         GPIO.setmode(GPIO.BCM)
         key1 = 5
@@ -345,6 +402,8 @@ def main():
                     if config['display']['cycle']==True:
                         crypto_list = currencycycle(crypto_list)
                         CURRENCY=crypto_list[0]
+                        mdisplay_list = mdisplaycycle(mdisplay_list)
+                        MDISPLAY=mdisplay_list[0]
                     lastcoinfetch=fullupdate()
                     datapulled = True
                     # Moved due to suspicion that button pressing was corrupting config file
@@ -357,7 +416,7 @@ def main():
     
     except KeyboardInterrupt:    
         logging.info("ctrl + c:")
-        epd2in7.epdconfig.module_exit()
+        epd2in13_V2.epdconfig.module_exit()
         GPIO.cleanup()
         exit()
 
