@@ -225,8 +225,16 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
                 accountsdata = str(accounts['total']) #grab totals
                 accountslist = accountsdata.split("'") #organize
                 wallet = float(accountslist[7]) #isolate total balance
-
-                draw.text((100,13),"Wallet: "+str(wallet)+" BTC",font =font_mining2,fill = 0) #draw wallet balance
+                currencydata = str(accounts['currencies'])
+                currencylist = currencydata.split(":")
+                rate = float('{:.8}'.format(currencylist[7]))
+                total = wallet*rate
+                balance = float('{:.2f}'.format(total))
+                
+                if config['mining']['walletcurrency'] == "btc" :
+                    draw.text((100,13),"Wallet: "+str(wallet)+" BTC",font =font_mining2,fill = 0) #draw wallet balance
+                if config['mining']['walletcurrency'] == "cad" :
+                    draw.text((100,13),"Wallet: $"+str(balance),font =font_mining,fill = 0)
             if config['mining']['display'] == "unpaid,wallet" or config['mining']['display'] == "unpaid" :
                 unpaid = private_api.get_unpaid() #get unpaid json
 
