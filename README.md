@@ -1,4 +1,4 @@
-# Cryptocurrency ePaper Ticker with NiceHash unpaid mining balance added
+# Cryptocurrency ePaper Ticker with NiceHash unpaid mining balance and wallet added
 (supports all 6000+ coins/currencies listed on [CoinGecko](https://api.coingecko.com/api/v3/coins/list))
 
 A Python3 ePaper Cryptocurrency price ticker that runs on a Raspberry Pi connected to a [Waveshare 2.7 inch monochrome ePaper display](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT) or [Waveshare 2.13 inch monochrome ePaper display](https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT).
@@ -27,7 +27,8 @@ cd e-Paper/RaspberryPi_JetsonNano/python
 sudo python3 setup.py install
 ```
 
-NiceHash API Keys if using the unpaid mining.
+NiceHash API Keys if using the unpaid mining or wallet.
+
 ## Install & Run
 
 Copy the files from this repository onto the Pi, or clone using:
@@ -154,9 +155,11 @@ Orientation must be set to 90 or 270 for the 2.13" screen.
 
 Coin names only work with the 2.13" screen.
 
-Unpaid mining only works for the 2.13" screen.
+Unpaid mining and wallet balance only works for the 2.13" screen.
 
-To use the NiceHash unpaid balance reporting you will need to aquire your API authorization keys from inside your account settings.
+To use the NiceHash unpaid/wallet balance reporting you will need to aquire your API authorization keys from inside your account settings.
+
+You can set it to display the wallet, unpaid or both in the config.
 
 # Licencing
 
