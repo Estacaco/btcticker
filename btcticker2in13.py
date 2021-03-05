@@ -29,6 +29,7 @@ font = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'),
 fontHorizontal = ImageFont.truetype(os.path.join(fontdir,'googlefonts/Roboto-Medium.ttf'), 16)
 font_date = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 11)
 font_mining = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 12)
+font_mining2 = ImageFont.truetype(os.path.join(fontdir,'PixelSplitter-Bold.ttf'), 10)
 
 def internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -217,21 +218,30 @@ def updateDisplay(config,pricestack,whichcoin,fiat,other):
             key = str(config['mining']['key']) #public key string
             secret = str(config['mining']['secret']) #secret key string
 
-
             private_api = nicehash.private_api(host, organisation_id, key, secret)
 
-            unpaid = private_api.get_unpaid() #get unpaid json
+            if config['mining']['display'] == "wallet,unpaid" or config['mining']['display'] == "wallet" :
+                accounts = private_api.get_accounts() #get accounts json
+                accountsdata = str(accounts['total']) #grab totals
+                accountslist = accountsdata.split("'") #organize
+                wallet = float(accountslist[7]) #isolate total balance
 
-            strdata = str(unpaid['data']) #grab "data" section and convert to string
-            listdata = strdata.split(",") #organize
+                draw.text((100,13),"Wallet: "+str(wallet)+" BTC",font =font_mining2,fill = 0) #draw wallet balance
+            if config['mining']['display'] == "unpaid,wallet" or config['mining']['display'] == "unpaid" :
+                unpaid = private_api.get_unpaid() #get unpaid json
 
-            maybe = float(listdata[2]) #grab total unpaid
-            almost = format(float(maybe), '.8f') #convert form scientific to decimal float
-            working = decimal.Decimal(almost) #convert from float to decimal
-            ok = working * 100000000 #make whole number
-            final = int(ok) #convert to integer to drop decimals
+                strdata = str(unpaid['data']) #grab "data" section and convert to string
+                listdata = strdata.split(",") #organize
 
-            draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0) #draw unpaid mining
+                maybe = float(listdata[2]) #grab total unpaid
+                almost = format(float(maybe), '.8f') #convert form scientific to decimal float
+                working = decimal.Decimal(almost) #convert from float to decimal
+                ok = working * 100000000 #make whole number
+                final = int(ok) #convert to integer to drop decimals
+
+                draw.text((100,13),"Unpaid NH: "+str(final)+" Sat",font =font_mining,fill = 0) #draw unpaid mining
+
+
 #end mining
 
  #.     uncomment the line below to show volume
@@ -270,6 +280,15 @@ def currencycycle(curr_list):
     curr_list = curr_list[1:]+curr_list[:1]
     return curr_list    
 
+def currencystringtolist(mdisplaystring):
+    mdisplay_list = mdisplaystring.split(",")
+    mdisplay_list = [x.strip(' ') for x in mdisplay_list]
+    return mdisplay_list
+
+def mdisplaycycle(mdisplay_list):
+    mdisplay_list = mdisplay_list[1:]+mdisplay_list[:1]
+    return mdisplay_list
+
 def main():
     
     def fullupdate():
@@ -302,6 +321,7 @@ def main():
         """ 
         config['ticker']['currency']=",".join(crypto_list)
         config['ticker']['fiatcurrency']=",".join(fiat_list)
+        config['mining']['display']=",".join(mdisplay_list)
         with open(configfile, 'w') as f:
             data = yaml.dump(config, f)    
 
@@ -321,11 +341,16 @@ def main():
         fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
         logging.info(fiat_list) 
 
+        mdisplay_list=currencystringtolist(config['mining']['display'])
+        logging.info(mdisplay_list)
+
         CURRENCY=crypto_list[0]
         FIAT=fiat_list[0]
+        MDISPLAY=mdisplay_list[0]
 
         logging.info(CURRENCY)
         logging.info(FIAT)
+        logging.info(MDISPLAY)
 
         GPIO.setmode(GPIO.BCM)
         key1 = 5
@@ -377,6 +402,8 @@ def main():
                     if config['display']['cycle']==True:
                         crypto_list = currencycycle(crypto_list)
                         CURRENCY=crypto_list[0]
+                        mdisplay_list = mdisplaycycle(mdisplay_list)
+                        MDISPLAY=mdisplay_list[0]
                     lastcoinfetch=fullupdate()
                     datapulled = True
                     # Moved due to suspicion that button pressing was corrupting config file
